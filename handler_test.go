@@ -12,7 +12,7 @@ func TestHandler(t *testing.T) {
 	}
 
 	server := http.Server{
-		Addr:    "localhost:8080",
+		Addr:    "localhost:"+port,
 		Handler: handler,
 	}
 
@@ -31,8 +31,23 @@ func TestServeMux(t *testing.T) {
 	})
 
 	server := http.Server{
-		Addr:    "localhost:8080",
+		Addr:    "localhost:"+port,
 		Handler: mux,
+	}
+
+	err := server.ListenAndServe()
+	errHandler(err)
+}
+
+func TestRequest(t *testing.T) {
+	var handler http.HandlerFunc = func (w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, r.Method)
+		fmt.Fprintln(w, r.RequestURI)
+	}
+
+	server := http.Server{
+		Addr: "localhost:"+port,
+		Handler: handler,
 	}
 
 	err := server.ListenAndServe()
