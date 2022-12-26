@@ -5,7 +5,9 @@ import (
 	"testing"
 )
 
-func errHandler(err error)  {
+var port = "8080"
+
+func errHandler(err error) {
 	if err != nil {
 		panic(err)
 	}
@@ -13,7 +15,7 @@ func errHandler(err error)  {
 
 func TestServer(t *testing.T) {
 	server := http.Server{
-		Addr: "localhost:8080",
+		Addr: "localhost:" + port,
 	}
 
 	err := server.ListenAndServe()
