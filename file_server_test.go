@@ -2,6 +2,7 @@ package goweb
 
 import (
 	"embed"
+	"io/fs"
 	"net/http"
 	"testing"
 )
@@ -26,7 +27,8 @@ func TestFileServer(t *testing.T) {
 var resource embed.FS
 
 func TestFileServerGolangEmbeded(t *testing.T) {
-	fileServer := http.FileServer(http.FS(resource))
+	directory, _ := fs.Sub(resource, "resources")
+	fileServer := http.FileServer(http.FS(directory))
 
 	mux := http.NewServeMux()
 	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
