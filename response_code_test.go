@@ -31,5 +31,5 @@ func TestResponseCodeInvalid(t *testing.T) {
 
 	fmt.Println(res.StatusCode)
 	fmt.Println(res.Status)
-	fmt.Println(body)
+	fmt.Println(string(body))
 }
