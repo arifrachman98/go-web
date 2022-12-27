@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{.Title}}</title>
+</head>
+<body>
+<h1> Nama : {{.Name}}</h1>
+{{if ge .Nilai 80}}
+    <h2>Good</h2>
+{{else if ge .Nilai 60}}
+    <h2>Nice Try</h2>
+{{else}}
+    <h2>Try Again</h2>
+{{end}}
+</body>
+</html>
