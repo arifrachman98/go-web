@@ -56,6 +56,14 @@ func TemplateDataStruct(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func TemplateDataMapIFStatement(w http.ResponseWriter, r *http.Request) {
+	t := template.Must(template.ParseFiles("./templates/statement_if.gohtml"))
+	t.ExecuteTemplate(w, "statement_if.gohtml", map[string]interface{}{
+		"Title": "Test Template with statement if",
+		"Name":  "Arif",
+	})
+}
+
 func TestSimpleHTML(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "http://localhost:"+port, nil)
 	rec := httptest.NewRecorder()
@@ -116,6 +124,17 @@ func TestTemplateDataStruct(t *testing.T) {
 	rec := httptest.NewRecorder()
 
 	TemplateDataStruct(rec, req)
+
+	body, err := io.ReadAll(rec.Result().Body)
+	errHandler(err)
+	fmt.Println(string(body))
+}
+
+func TestTemplateDataMapStatementIF(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "http://localhost:"+port, nil)
+	rec := httptest.NewRecorder()
+
+	TemplateDataMapIFStatement(rec, req)
 
 	body, err := io.ReadAll(rec.Result().Body)
 	errHandler(err)
