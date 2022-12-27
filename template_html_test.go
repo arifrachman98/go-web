@@ -1,6 +1,7 @@
 package goweb
 
 import (
+	"embed"
 	"fmt"
 	"html/template"
 	"io"
@@ -11,9 +12,6 @@ import (
 
 func SimpleHTML(w http.ResponseWriter, r *http.Request) {
 	templateText := `<html><body>{{.}}</body></html>`
-	// t, err := template.New("SIMPLE").Parse(templateText)
-	// errHandler(err)
-
 	t := template.Must(template.New("Simple").Parse(templateText))
 
 	t.ExecuteTemplate(w, "Simple", "Test Template HTML on Go-Lang")
@@ -21,7 +19,20 @@ func SimpleHTML(w http.ResponseWriter, r *http.Request) {
 
 func SimpleHTMLFile(w http.ResponseWriter, r *http.Request) {
 	t := template.Must(template.ParseFiles("./templates/simple.gohtml"))
-	t.ExecuteTemplate(w, "simple.gohtml", "Test Template")
+	t.ExecuteTemplate(w, "simple.gohtml", "Test File HTML Template")
+}
+
+func TemplateDirectory(w http.ResponseWriter, r *http.Request) {
+	t := template.Must(template.ParseGlob("./templates/*.gohtml"))
+	t.ExecuteTemplate(w, "simple.gohtml", "Test Directory HTML Template")
+}
+
+//go:embed templates
+var templates embed.FS
+
+func TemplateEmbed(w http.ResponseWriter, r *http.Request) {
+	t := template.Must(template.ParseFS(templates, "templates/*.gohtml"))
+	t.ExecuteTemplate(w, "simple.gohtml", "Test Embed HTML Template")
 }
 
 func TestSimpleHTML(t *testing.T) {
@@ -40,6 +51,28 @@ func TestSimpleHTMLFile(t *testing.T) {
 	rec := httptest.NewRecorder()
 
 	SimpleHTMLFile(rec, req)
+
+	body, err := io.ReadAll(rec.Result().Body)
+	errHandler(err)
+	fmt.Println(string(body))
+}
+
+func TestSimpleHTMLDirectory(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "http://localhost:"+port, nil)
+	rec := httptest.NewRecorder()
+
+	TemplateDirectory(rec, req)
+
+	body, err := io.ReadAll(rec.Result().Body)
+	errHandler(err)
+	fmt.Println(string(body))
+}
+
+func TestSimpleHTMLEmbed(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "http://localhost:"+port, nil)
+	rec := httptest.NewRecorder()
+
+	TemplateEmbed(rec, req)
 
 	body, err := io.ReadAll(rec.Result().Body)
 	errHandler(err)
