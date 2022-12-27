@@ -83,6 +83,17 @@ func IterateRange(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func NestedMap(w http.ResponseWriter, r *http.Request) {
+	t := template.Must(template.ParseFiles("./templates/nested_map.gohtml"))
+	t.ExecuteTemplate(w, "nested_map.gohtml", map[string]interface{}{
+		"Name": "Arif",
+		"Address": map[string]interface{}{
+			"Street": "Jalan jalan kemana",
+			"City":   "Namek Planet",
+		},
+	})
+}
+
 func TestSimpleHTML(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "http://localhost:"+port, nil)
 	rec := httptest.NewRecorder()
@@ -176,6 +187,17 @@ func TestIterateRangeValue(t *testing.T) {
 	rec := httptest.NewRecorder()
 
 	IterateRange(rec, req)
+
+	body, err := io.ReadAll(rec.Result().Body)
+	errHandler(err)
+	fmt.Println(string(body))
+}
+
+func TestNestedMap(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "http://localhost:"+port, nil)
+	rec := httptest.NewRecorder()
+
+	NestedMap(rec, req)
 
 	body, err := io.ReadAll(rec.Result().Body)
 	errHandler(err)
