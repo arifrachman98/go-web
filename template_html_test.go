@@ -73,6 +73,16 @@ func ComparateValue(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func IterateRange(w http.ResponseWriter, r *http.Request) {
+	t := template.Must(template.ParseFiles("./templates/range.gohtml"))
+	t.ExecuteTemplate(w, "range.gohtml", map[string]interface{}{
+		"Title": "Test template Iterate with range",
+		"Hobbies": []string{
+			"Game", "Sport", "Code",
+		},
+	})
+}
+
 func TestSimpleHTML(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "http://localhost:"+port, nil)
 	rec := httptest.NewRecorder()
@@ -155,6 +165,17 @@ func TestCompareValue(t *testing.T) {
 	rec := httptest.NewRecorder()
 
 	ComparateValue(rec, req)
+
+	body, err := io.ReadAll(rec.Result().Body)
+	errHandler(err)
+	fmt.Println(string(body))
+}
+
+func TestIterateRangeValue(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "http://localhost:"+port, nil)
+	rec := httptest.NewRecorder()
+
+	IterateRange(rec, req)
 
 	body, err := io.ReadAll(rec.Result().Body)
 	errHandler(err)
