@@ -35,6 +35,27 @@ func TemplateEmbed(w http.ResponseWriter, r *http.Request) {
 	t.ExecuteTemplate(w, "simple.gohtml", "Test Embed HTML Template")
 }
 
+func TemplateDataMap(w http.ResponseWriter, r *http.Request) {
+	t := template.Must(template.ParseFiles("./templates/name.gohtml"))
+	t.ExecuteTemplate(w, "name.gohtml", map[string]interface{}{
+		"Title": "Template data Map",
+		"Name":  "Arif",
+	})
+}
+
+type Page struct {
+	Title string
+	Name  string
+}
+
+func TemplateDataStruct(w http.ResponseWriter, r *http.Request) {
+	t := template.Must(template.ParseFiles("./templates/name.gohtml"))
+	t.ExecuteTemplate(w, "name.gohtml", Page{
+		Title: "Template data struct",
+		Name:  "Arif",
+	})
+}
+
 func TestSimpleHTML(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "http://localhost:"+port, nil)
 	rec := httptest.NewRecorder()
@@ -73,6 +94,28 @@ func TestSimpleHTMLEmbed(t *testing.T) {
 	rec := httptest.NewRecorder()
 
 	TemplateEmbed(rec, req)
+
+	body, err := io.ReadAll(rec.Result().Body)
+	errHandler(err)
+	fmt.Println(string(body))
+}
+
+func TestTemplateDataMap(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "http://localhost:"+port, nil)
+	rec := httptest.NewRecorder()
+
+	TemplateDataMap(rec, req)
+
+	body, err := io.ReadAll(rec.Result().Body)
+	errHandler(err)
+	fmt.Println(string(body))
+}
+
+func TestTemplateDataStruct(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "http://localhost:"+port, nil)
+	rec := httptest.NewRecorder()
+
+	TemplateDataStruct(rec, req)
 
 	body, err := io.ReadAll(rec.Result().Body)
 	errHandler(err)
