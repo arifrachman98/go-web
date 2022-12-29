@@ -94,6 +94,19 @@ func NestedMap(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func TemplateLayout(w http.ResponseWriter, r *http.Request) {
+	t := template.Must(template.ParseFiles(
+		"./templates/header.gohtml",
+		"./templates/footer.gohtml",
+		"./templates/layout.gohtml",
+		))
+
+		t.ExecuteTemplate(w, "layout.gohtml", map[string]interface{}{
+			"Title" : "Template Layout",
+			"Name" : "Arif",
+		})
+}
+
 func TestSimpleHTML(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "http://localhost:"+port, nil)
 	rec := httptest.NewRecorder()
@@ -203,3 +216,14 @@ func TestNestedMap(t *testing.T) {
 	errHandler(err)
 	fmt.Println(string(body))
 }
+
+func TestTemplateLayout(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "https://localhost:"+port,nil)
+	rec := httptest.NewRecorder()
+
+	TemplateLayout(rec, req)
+
+	body, err := io.ReadAll(rec.Result().Body)
+	errHandler(err)
+	fmt.Println(string(body))
+} 
