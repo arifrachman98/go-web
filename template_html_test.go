@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -117,8 +118,29 @@ func (myPage MyPage) SayHello(name string) string {
 
 func TemplateFunction(w http.ResponseWriter, r *http.Request) {
 	t := template.Must(template.New("Function").Parse(`{{.SayHello "Dodo"}}`))
-	t.ExecuteTemplate(w, "Function", MyPage{
+	t.ExecuteTemplate(w, "Functionw", MyPage{
 		Name: "Arif",
+	})
+}
+
+func TemplateFunctionGlobal(w http.ResponseWriter, r *http.Request) {
+	t := template.Must(template.New("Functionw").Parse(`{{len .Name}}`))
+	t.ExecuteTemplate(w, "Functionw", MyPage{
+		Name: "Dading",
+	})
+}
+
+func TemplateFunctionCreateGlobal(w http.ResponseWriter, r *http.Request) {
+	t := template.New("Functions")
+	t = t.Funcs(map[string]interface{}{
+		"upper": func(value string) string {
+			return strings.ToUpper(value)
+		},
+	})
+
+	t = template.Must(t.Parse(`{{upper .Name}}`))
+	t.ExecuteTemplate(w, "Functions", MyPage{
+		Name: "Arif Rachman Hakim",
 	})
 }
 
@@ -233,7 +255,7 @@ func TestNestedMap(t *testing.T) {
 }
 
 func TestTemplateLayout(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "https://localhost:"+port, nil)
+	req := httptest.NewRequest(http.MethodGet, "http://localhost:"+port, nil)
 	rec := httptest.NewRecorder()
 
 	TemplateLayout(rec, req)
@@ -248,6 +270,28 @@ func TestTemplateFunction(t *testing.T) {
 	rec := httptest.NewRecorder()
 
 	TemplateFunction(rec, req)
+
+	body, err := io.ReadAll(rec.Result().Body)
+	errHandler(err)
+	fmt.Println(string(body))
+}
+
+func TestTemplateFunctionGlobal(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "http://localhost:"+port, nil)
+	rec := httptest.NewRecorder()
+
+	TemplateFunctionGlobal(rec, req)
+
+	body, err := io.ReadAll(rec.Result().Body)
+	errHandler(err)
+	fmt.Println(string(body))
+}
+
+func TestTemplateFunctionCreateGlobal(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "http://localhost:"+port, nil)
+	rec := httptest.NewRecorder()
+
+	TemplateFunctionCreateGlobal(rec, req)
 
 	body, err := io.ReadAll(rec.Result().Body)
 	errHandler(err)
