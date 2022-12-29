@@ -99,12 +99,27 @@ func TemplateLayout(w http.ResponseWriter, r *http.Request) {
 		"./templates/header.gohtml",
 		"./templates/footer.gohtml",
 		"./templates/layout.gohtml",
-		))
+	))
 
-		t.ExecuteTemplate(w, "layout.gohtml", map[string]interface{}{
-			"Title" : "Template Layout",
-			"Name" : "Arif",
-		})
+	t.ExecuteTemplate(w, "layout.gohtml", map[string]interface{}{
+		"Title": "Template Layout",
+		"Name":  "Arif",
+	})
+}
+
+type MyPage struct {
+	Name string
+}
+
+func (myPage MyPage) SayHello(name string) string {
+	return "Hello " + name + ", My name is " + myPage.Name
+}
+
+func TemplateFunction(w http.ResponseWriter, r *http.Request) {
+	t := template.Must(template.New("Function").Parse(`{{.SayHello "Dodo"}}`))
+	t.ExecuteTemplate(w, "Function", MyPage{
+		Name: "Arif",
+	})
 }
 
 func TestSimpleHTML(t *testing.T) {
@@ -218,7 +233,7 @@ func TestNestedMap(t *testing.T) {
 }
 
 func TestTemplateLayout(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "https://localhost:"+port,nil)
+	req := httptest.NewRequest(http.MethodGet, "https://localhost:"+port, nil)
 	rec := httptest.NewRecorder()
 
 	TemplateLayout(rec, req)
@@ -226,4 +241,15 @@ func TestTemplateLayout(t *testing.T) {
 	body, err := io.ReadAll(rec.Result().Body)
 	errHandler(err)
 	fmt.Println(string(body))
-} 
+}
+
+func TestTemplateFunction(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "http://localhost"+port, nil)
+	rec := httptest.NewRecorder()
+
+	TemplateFunction(rec, req)
+
+	body, err := io.ReadAll(rec.Result().Body)
+	errHandler(err)
+	fmt.Println(string(body))
+}
