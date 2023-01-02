@@ -152,6 +152,27 @@ func TemplateCaching(w http.ResponseWriter, r *http.Request) {
 	myTemplated.ExecuteTemplate(w, "simple.gohtml", "Hello Custom template caching")
 }
 
+func TemplateAutoEscape(w http.ResponseWriter, r *http.Request) {
+	myTemplated.ExecuteTemplate(w, "post.gohtml", map[string]interface{}{
+		"Title": "Template Auto Escape",
+		"Body":  "<h1>HAH</h1>",
+	})
+}
+
+func TemplateAutoEscapeDisabled(w http.ResponseWriter, r *http.Request) {
+	myTemplated.ExecuteTemplate(w, "post.gohtml", map[string]interface{}{
+		"Title": "Template Auto Escape",
+		"Body":  template.HTML("<h2>THIS WILL BE SHUTDOWN</h2>"),
+	})
+}
+
+func TemplateXSS(w http.ResponseWriter, r *http.Request) {
+	myTemplated.ExecuteTemplate(w, "post.gohtml", map[string]interface{}{
+		"Title": "Template Auto Escape",
+		"Body":  template.HTML(r.URL.Query().Get("body")),
+	})
+}
+
 func TestSimpleHTML(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "http://localhost:"+port, nil)
 	rec := httptest.NewRecorder()
@@ -315,4 +336,67 @@ func TestTemplateCaching(t *testing.T) {
 	body, err := io.ReadAll(rec.Result().Body)
 	errHandler(err)
 	fmt.Println(string(body))
+}
+
+func TestTemplateAutoEscape(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "http://localhost:"+port, nil)
+	rec := httptest.NewRecorder()
+
+	TemplateAutoEscape(rec, req)
+
+	body, err := io.ReadAll(rec.Result().Body)
+	errHandler(err)
+	fmt.Println(string(body))
+}
+
+func TestTemplateAutoEscapeServer(t *testing.T) {
+	server := http.Server{
+		Addr:    "localhost:" + port,
+		Handler: http.HandlerFunc(TemplateAutoEscape),
+	}
+
+	err := server.ListenAndServe()
+	errHandler(err)
+}
+
+func TestTemplateAutoEscapeDisabled(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "http://localhost:"+port, nil)
+	rec := httptest.NewRecorder()
+
+	TemplateAutoEscapeDisabled(rec, req)
+
+	body, err := io.ReadAll(rec.Result().Body)
+	errHandler(err)
+	fmt.Println(string(body))
+}
+
+func TestTemplateAutoEscapeDisabledServer(t *testing.T) {
+	server := http.Server{
+		Addr:    "localhost:" + port,
+		Handler: http.HandlerFunc(TemplateAutoEscapeDisabled),
+	}
+
+	err := server.ListenAndServe()
+	errHandler(err)
+}
+
+func TestTemplateXSS(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "http://localhost:"+port+"/?body=<p>alert</p>", nil)
+	rec := httptest.NewRecorder()
+
+	TemplateXSS(rec, req)
+
+	body, err := io.ReadAll(rec.Result().Body)
+	errHandler(err)
+	fmt.Println(string(body))
+}
+
+func TestTemplateXSSServer(t *testing.T) {
+	server := http.Server{
+		Addr:    "localhost:" + port,
+		Handler: http.HandlerFunc(TemplateXSS),
+	}
+
+	err := server.ListenAndServe()
+	errHandler(err)
 }
