@@ -144,6 +144,14 @@ func TemplateFunctionCreateGlobal(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+//go:embed templates/*.gohtml
+var templated embed.FS
+var myTemplated = template.Must(template.ParseFS(templated, "templates/*.gohtml"))
+
+func TemplateCaching(w http.ResponseWriter, r *http.Request) {
+	myTemplated.ExecuteTemplate(w, "simple.gohtml", "Hello Custom template caching")
+}
+
 func TestSimpleHTML(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "http://localhost:"+port, nil)
 	rec := httptest.NewRecorder()
@@ -292,6 +300,17 @@ func TestTemplateFunctionCreateGlobal(t *testing.T) {
 	rec := httptest.NewRecorder()
 
 	TemplateFunctionCreateGlobal(rec, req)
+
+	body, err := io.ReadAll(rec.Result().Body)
+	errHandler(err)
+	fmt.Println(string(body))
+}
+
+func TestTemplateCaching(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "http://localhost:"+port, nil)
+	rec := httptest.NewRecorder()
+
+	TemplateCaching(rec, req)
 
 	body, err := io.ReadAll(rec.Result().Body)
 	errHandler(err)
