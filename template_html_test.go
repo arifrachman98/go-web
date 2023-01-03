@@ -1,12 +1,15 @@
 package goweb
 
 import (
+	"bytes"
 	"embed"
 	"fmt"
 	"html/template"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 )
@@ -193,6 +196,31 @@ func TestSimpleHTML(t *testing.T) {
 	body, err := io.ReadAll(rec.Result().Body)
 	errHandler(err)
 	fmt.Println(string(body))
+}
+
+//go:embed resources/1600744313148.jpg
+var uploadFileTest []byte
+
+func UploadForm(w http.ResponseWriter, r *http.Request) {
+	myTemplated.ExecuteTemplate(w, "upload.form.gohtml", nil)
+}
+
+func Upload(w http.ResponseWriter, r *http.Request) {
+	//r.ParseMultipartForm(32 << 20)
+	file, fheader, err := r.FormFile("file")
+	errHandler(err)
+
+	fdest, err := os.Create("./resources/" + fheader.Filename)
+	errHandler(err)
+
+	_, err = io.Copy(fdest, file)
+	errHandler(err)
+
+	name := r.PostFormValue("name")
+	myTemplated.ExecuteTemplate(w, "upload.success.gohtml", map[string]interface{}{
+		"Name": name,
+		"File": "/static/" + fheader.Filename,
+	})
 }
 
 func TestSimpleHTMLFile(t *testing.T) {
@@ -425,4 +453,41 @@ func TestRedirect(t *testing.T) {
 
 	err := server.ListenAndServe()
 	errHandler(err)
+}
+
+func TestUploadForm(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", UploadForm)
+	mux.HandleFunc("/upload", Upload)
+	mux.Handle("/static/", http.StripPrefix("/static", http.FileServer(http.Dir("./resources"))))
+
+	server := http.Server{
+		Addr:    "localhost:" + port,
+		Handler: mux,
+	}
+
+	err := server.ListenAndServe()
+	errHandler(err)
+}
+
+func TestUploadFile(t *testing.T) {
+	body := new(bytes.Buffer)
+
+	writter := multipart.NewWriter(body)
+	writter.WriteField("name", "Tested")
+
+	file, err := writter.CreateFormFile("file", "TestUpload.jpg")
+	errHandler(err)
+	file.Write(uploadFileTest)
+	writter.Close()
+
+	req := httptest.NewRequest(http.MethodPost, "localhost:"+port+"/upload", body)
+	req.Header.Set("Content-type", writter.FormDataContentType())
+	rec := httptest.NewRecorder()
+
+	Upload(rec, req)
+
+	bodyResp, err := io.ReadAll(rec.Result().Body)
+	errHandler(err)
+	fmt.Println(string(bodyResp))
 }
